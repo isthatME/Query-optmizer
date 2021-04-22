@@ -120,5 +120,8 @@
       }
     }
   },
-  "defaultProject": "query-optmizer"
+  "defaultProject": "query-optmizer",
+  "cli": {
+    "analytics": "9e31c602-d55b-41a2-8dc7-602c2241e93e"
+  }
 }
