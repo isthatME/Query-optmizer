@@ -84,7 +84,6 @@ export class AppComponent implements OnInit {
     if (this.splitedString[0].toUpperCase() == 'SELECT') {
       var i = 1
       var j = 1
-
       while (this.splitedString[i].toUpperCase() != "FROM") {
         campos.push(this.splitedString[i].toUpperCase())
         i++;
