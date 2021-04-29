@@ -29,7 +29,7 @@ export class AppComponent implements OnInit {
     `SELECT USUARIO.NOME, NUMERO, BAIRRO  FROM  USUARIO 
   JOIN CONTAS  
   ON CONTAS.USUARIO_IDUSUARIO == USUARIO.IDUSUARIO
-  WHERE NUMERO = 10 AND BAIRO = 'CENTRO'
+  WHERE NUMERO > 10 AND BAIRRO = 'CENTRO' AND SALDOINICIAL > 0
   ORDER BY BAIRRO, NUMERO, NOME`
 
   ngOnInit() {
@@ -79,7 +79,6 @@ export class AppComponent implements OnInit {
         tabelas.push(this.splitedString[index + 1])
       }
     })
-    console.log("tabelas: ", tabelas)
 
     if (this.splitedString[0].toUpperCase() == 'SELECT') {
       var i = 1
@@ -88,29 +87,28 @@ export class AppComponent implements OnInit {
         campos.push(this.splitedString[i].toUpperCase())
         i++;
       }
-      console.log("campos: ", campos)
 
       while (i < this.splitedString.length) {
         if (this.splitedString[i].toUpperCase() == "JOIN") {
-          joins.push(this.splitedString[i + 1].toUpperCase() + " " +
-            this.splitedString[i + 2].toUpperCase() + " " +
-            this.splitedString[i + 3].toUpperCase() + " " +
-            this.splitedString[i + 4].toUpperCase() + " " +
-            this.splitedString[i + 5].toUpperCase()
+          joins.push(this.splitedString[i + 1].toUpperCase().trim() + " " +
+            this.splitedString[i + 2].toUpperCase().trim() + " " +
+            this.splitedString[i + 3].toUpperCase().trim() + " " +
+            this.splitedString[i + 4].toUpperCase().trim() + " " +
+            this.splitedString[i + 5].toUpperCase().trim()
           )
         }
 
         if (this.splitedString[i].toUpperCase() == "WHERE" || this.splitedString[i].toUpperCase() == "AND") {
           wheres.push(this.splitedString[i + 1].toUpperCase() + " " +
-            this.splitedString[i + 2].toUpperCase() + " " +
-            this.splitedString[i + 3].toUpperCase()
+            this.splitedString[i + 2].toUpperCase().trim() + " " +
+            this.splitedString[i + 3].toUpperCase().trim()
           )
         }
 
         if (this.splitedString[i].toUpperCase() == "ORDER") {
           i += 2
           while (i < this.splitedString.length) {
-            orders.push(this.splitedString[i].toUpperCase())
+            orders.push(this.splitedString[i].toUpperCase().trim())
             i++;
           }
           break;
@@ -118,11 +116,55 @@ export class AppComponent implements OnInit {
         i++;
       }
 
-      console.log('valido: ', this.verificadorDeQuery(campos, tabelas))
+      console.log('valido: ', this.verificadorDeQuery(campos, tabelas))      
+      console.log("tabelas: ", tabelas)
+      console.log("campos: ", campos)
       console.log("joins: ", joins)
       console.log("wheres: ", wheres)
       console.log("orders: ", orders)
     }
+
+    //OPERACOES
+    let ordemOperacoes = []
+    wheres.map(where => {
+      // console.log(where)
+      let splitedWhere = where.split(" ")
+      let campo = splitedWhere[0]
+      if (campo.split('.').length == 2) {
+        campo = campo.split('.')[1]
+      }
+      let tabela = ""
+      this.tables.forEach(table => {
+        table.tabela.forEach(campoTabela => {
+          if (campo == campoTabela) {
+            tabela = table.nome
+          }
+        })
+      });
+      console.log(tabela)
+      ordemOperacoes.push("S " + where + " (" + tabela + ")")
+    })
+
+    joins.map(join => {
+      // console.log(join)
+      let splitedJoin = join.trim().split(" ")
+      let tabela1 = splitedJoin[2].split(".")[0]
+      let campo1 = splitedJoin[2].split(".")[1]
+      let tabela2 = splitedJoin[4].split(".")[0]
+      let campo2 = splitedJoin[4].split(".")[1]
+      ordemOperacoes.push(tabela1 + " |X| " + campo1 + " = " + campo2 + " " + tabela2)      
+    })
+
+    campos.map(c => {
+      let splitedCampo = c.split(" ")
+      let campo = splitedCampo[0]
+      if (campo.split('.').length == 2) {
+        campo = campo.split('.')[1]
+      }
+      ordemOperacoes.push("P " + campo)
+    })
+
+    console.log(ordemOperacoes)
   }
 
 }
