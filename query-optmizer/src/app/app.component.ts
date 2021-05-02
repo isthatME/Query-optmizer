@@ -4,7 +4,7 @@ import { Tabela } from 'src/models/table';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
   title = 'query-optmizer';
@@ -15,7 +15,7 @@ export class AppComponent implements OnInit {
   tables: Tabela[] = [
     { nome: "USUARIO", tabela: ['IDUSUARIO', 'NOME', 'LOGRADOURO', 'NUMERO', 'BAIRRO', 'CEP', 'UF', 'DATANASCIMENTO'] },
     { nome: "CONTAS", tabela: ['IDCONTA', 'DESCRICAO', 'TIPOCONTA_IDTIPOCONTA', 'USUARIO_IDUSUARIO', 'SALDOINICIAL'] },
-    { nome: "TIPOCONTA", tabela: ['IDTIPOCONTA', 'DESCRICAO'] },
+    { nome: "TIPOCONTA", tabela: ['IDTIPOCONTA', 'DESCRICAO']},
     { nome: "CATEGORIA", tabela: ['IDCATEGORIA', 'DESCCATEGORIA'] },
     { nome: "MOVIMENTACAO", tabela: ['IDMOVIMENTACAO', 'DATAMOVIMENTACAO', 'DESCRICAO', 'TIPOMOVIMENTO_IDTIPOMOVIMENTO', 'CATEGORIA_IDCATEGORIA', 'CONTAS_IDCONTA', 'VALOR'] },
     { nome: "TIPOMOVIMENTO", tabela: ['IDTIPOMOVIMENTO', 'DESCMOVIMENTACAO'] }
@@ -25,12 +25,13 @@ export class AppComponent implements OnInit {
 
   //variáveis
   splitedString: string[];
+  selects = []
   query: string =
     `SELECT USUARIO.NOME, NUMERO, BAIRRO  FROM  USUARIO 
-  JOIN CONTAS  
-  ON CONTAS.USUARIO_IDUSUARIO == USUARIO.IDUSUARIO
-  WHERE NUMERO > 10 AND BAIRRO = 'CENTRO' AND SALDOINICIAL > 0
-  ORDER BY BAIRRO, NUMERO, NOME`
+    JOIN CONTAS  
+    ON CONTAS.USUARIO_IDUSUARIO = USUARIO.IDUSUARIO 
+    WHERE NUMERO > 10 AND BAIRRO = 'CENTRO' AND SALDOINICIAL = 0
+    ORDER BY BAIRRO, NUMERO, NOME`
 
   ngOnInit() {
     this.analizadorLexico(this.query);
@@ -141,8 +142,8 @@ export class AppComponent implements OnInit {
           }
         })
       });
-      console.log(tabela)
       ordemOperacoes.push("S " + where + " (" + tabela + ")")
+      this.selects.push({campo: where.split(' ')[0], operador: where.split(' ')[1], operando:where.split(' ')[2] ,tabela: tabela})
     })
 
     joins.map(join => {
@@ -163,8 +164,8 @@ export class AppComponent implements OnInit {
       }
       ordemOperacoes.push("P " + campo)
     })
-
     console.log(ordemOperacoes)
+    console.log(this.selects)
   }
 
 }

@@ -1,3 +1,16 @@
-<p *ngFor="let item of splitedString">
-    {{ item }}
-</p>
+<div class="tree">
+    <ul>
+        <li>
+            <a href="#">Parent</a>
+            <ul>
+                <li>
+                    <ul >
+                        <li *ngFor="let item of selects">
+                            <p style="font-size: 10px;">{{ item.campo + ' ' +  item.operador + ' ' + item.operando}}</p>
+                            <a href="#">{{ item.tabela }}</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    </ul>
