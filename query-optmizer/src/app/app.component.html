@@ -5,8 +5,8 @@
             <ul>
                 <li>
                     <ul >
-                        <li *ngFor="let item of selects">
-                            <p style="font-size: 10px;">{{ item.campo + ' ' +  item.operador + ' ' + item.operando}}</p>
+                        <li *ngFor="let item of selectsFiltered; let i = index">
+                            <p style="font-size: 10px;">{{ item.condicoes }}</p>
                             <a href="#">{{ item.tabela }}</a>
                         </li>
                     </ul>
