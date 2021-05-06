@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Tabela } from 'src/models/table';
 
 @Component({
@@ -8,6 +9,7 @@ import { Tabela } from 'src/models/table';
 })
 export class AppComponent implements OnInit {
   title = 'query-optmizer';
+  constructor(private fb: FormBuilder){}
 
   operadores: string[] = ['=', '>', '<', '<=', '>=', '<', '>', 'AND', 'OR', 'IN', 'NOT IN', 'LIKE'];
   operacoes: string[] = ['SELECT', 'WHERE', 'JOIN', 'ORDER BY'];
@@ -23,6 +25,8 @@ export class AppComponent implements OnInit {
 
   isQueryValid: boolean;
 
+  form: FormGroup;
+
   //variáveis
   splitedString: string[];
   selects = []
@@ -30,12 +34,17 @@ export class AppComponent implements OnInit {
   query: string =
     `SELECT USUARIO.NOME, NUMERO, BAIRRO  FROM  USUARIO 
     JOIN CONTAS  
-    ON CONTAS.USUARIO_IDUSUARIO = USUARIO.IDUSUARIO 
+    ON CONTAS.USUARIO_IDUSUARIO = USUARIO.IDUSUARIO
     WHERE NUMERO > 10 AND BAIRRO = 'CENTRO' AND SALDOINICIAL = 0
     ORDER BY BAIRRO, NUMERO, NOME`
 
   ngOnInit() {
     this.analizadorLexico(this.query);
+    this.form = this.fb.group({
+      query: [null, Validators.required]
+    })
+  }
+  onSubmit(form: FormGroup) {
   }
   verificadorDeQuery(campos, tabelas): boolean {
     var tableInc = 0;
@@ -145,7 +154,7 @@ export class AppComponent implements OnInit {
           }
         })
       });
-      ordemOperacoes.push("S " + where + " (" + tabela + ")")
+      ordemOperacoes.push({select: {campo: where, tabela: tabela }, join: null, projecao: null})
 
       tabelas.map((tab, index) => {
         if (tabela == tab) {
@@ -153,7 +162,6 @@ export class AppComponent implements OnInit {
         }
       })
       if (where.split(' ')[1] == '=') {
-
         this.selects.unshift({ campo: where.split(' ')[0], operador: where.split(' ')[1], operando: where.split(' ')[2], tabela: tabela })
       } else {
 
@@ -169,7 +177,6 @@ export class AppComponent implements OnInit {
       })
       this.selectsFiltered[i] = ({ tabela: e, condicoes: condicao })
     })
-    console.log(this.selectsFiltered)
 
     joins.map(join => {
       // console.log(join)
@@ -178,7 +185,9 @@ export class AppComponent implements OnInit {
       let campo1 = splitedJoin[2].split(".")[1]
       let tabela2 = splitedJoin[4].split(".")[0]
       let campo2 = splitedJoin[4].split(".")[1]
-      ordemOperacoes.push(tabela1 + " |X| " + campo1 + " = " + campo2 + " " + tabela2)
+      ordemOperacoes.push({select: null, join: tabela1 + " |X| " + campo1 + " = " + campo2 + " " + tabela2, projecao:null})
+      ordemOperacoes.push({select: null, where: null, join: null, projecao: {campo: campo1, tabela:  tabela1 }})
+      ordemOperacoes.push({select: null, where: null, join: null, projecao: {campo: campo2, tabela:  tabela2 }})
     })
 
     campos.map(c => {
@@ -187,10 +196,18 @@ export class AppComponent implements OnInit {
       if (campo.split('.').length == 2) {
         campo = campo.split('.')[1]
       }
-      ordemOperacoes.push("P " + campo)
+      this.tables.forEach(table => {
+        table.tabela.forEach(campoTabela => {
+          if (campo == campoTabela) {
+            ordemOperacoes.push({select: null, where: null, join: null, projecao: {campo: campo, tabela:  table.nome }})
+          }
+        })
+      });
+      
     })
-    // console.log(ordemOperacoes)
-    // console.log(this.selects)
+    console.log(ordemOperacoes)
+    console.log(this.selectsFiltered)
+    console.log(this.selects)
   }
 
 }
