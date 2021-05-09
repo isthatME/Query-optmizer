@@ -9,7 +9,7 @@ import { Tabela } from 'src/models/table';
 })
 export class AppComponent implements OnInit {
   title = 'query-optmizer';
-  constructor(private fb: FormBuilder){}
+  constructor(private fb: FormBuilder) { }
 
   operadores: string[] = ['=', '>', '<', '<=', '>=', '<', '>', 'AND', 'OR', 'IN', 'NOT IN', 'LIKE'];
   operacoes: string[] = ['SELECT', 'WHERE', 'JOIN', 'ORDER BY'];
@@ -23,16 +23,19 @@ export class AppComponent implements OnInit {
     { nome: "TIPOMOVIMENTO", tabela: ['IDTIPOMOVIMENTO', 'DESCMOVIMENTACAO'] }
   ]
 
-  isQueryValid: boolean;
-
+  ordemOperacoes = []
   form: FormGroup;
 
-  //variáveis
+  //variaveis para exibição
+  projecaoPrincipal: string;
+  juncoes = [];
+  tabelas = []
+
   splitedString: string[];
   selects = []
   selectsFiltered = [];
   query: string =
-    `SELECT USUARIO.NOME, NUMERO, BAIRRO  FROM  USUARIO 
+    `SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO 
     JOIN CONTAS  
     ON CONTAS.USUARIO_IDUSUARIO = USUARIO.IDUSUARIO
     WHERE NUMERO > 10 AND BAIRRO = 'CENTRO' AND SALDOINICIAL = 0
@@ -78,17 +81,16 @@ export class AppComponent implements OnInit {
 
   analizadorLexico(str) {
     this.splitedString = str.split(/,| /).filter(e => e != '' && e != '\n')
-    var tabelas = []
     var campos = []
     var joins = []
     var wheres = []
     var orders = []
-    this.selectsFiltered = Array(tabelas.length).fill(null)
+    this.selectsFiltered = Array(this.tabelas.length).fill(null)
     this.splitedString.map((item, index) => {
       if (item == "FROM") {
-        tabelas.push(this.splitedString[index + 1])
+        this.tabelas.push(this.splitedString[index + 1])
       } else if (item == "JOIN") {
-        tabelas.push(this.splitedString[index + 1])
+        this.tabelas.push(this.splitedString[index + 1])
       }
     })
 
@@ -137,7 +139,7 @@ export class AppComponent implements OnInit {
     }
 
     //OPERACOES
-    let ordemOperacoes = []
+
     var obj = []
     wheres.map(where => {
       // console.log(where)
@@ -154,9 +156,9 @@ export class AppComponent implements OnInit {
           }
         })
       });
-      ordemOperacoes.push({select: {campo: where, tabela: tabela }, join: null, projecao: null})
+      this.ordemOperacoes.push({ select: { campo: where, tabela: tabela }, join: null, projecao: null })
 
-      tabelas.map((tab, index) => {
+      this.tabelas.map((tab, index) => {
         if (tabela == tab) {
           obj.push({ tabela: tabela, condicao: where })
         }
@@ -168,7 +170,7 @@ export class AppComponent implements OnInit {
         this.selects.push({ campo: where.split(' ')[0], operador: where.split(' ')[1], operando: where.split(' ')[2], tabela: tabela })
       }
     })
-    tabelas.map((e, i) => {
+    this.tabelas.map((e, i) => {
       var condicao = ''
       obj.forEach((elem, index) => {
         if (elem.tabela == e) {
@@ -177,19 +179,16 @@ export class AppComponent implements OnInit {
       })
       this.selectsFiltered[i] = ({ tabela: e, condicoes: condicao })
     })
-
     joins.map(join => {
-      // console.log(join)
       let splitedJoin = join.trim().split(" ")
       let tabela1 = splitedJoin[2].split(".")[0]
       let campo1 = splitedJoin[2].split(".")[1]
       let tabela2 = splitedJoin[4].split(".")[0]
       let campo2 = splitedJoin[4].split(".")[1]
-      ordemOperacoes.push({select: null, join: tabela1 + " |X| " + campo1 + " = " + campo2 + " " + tabela2, projecao:null})
-      ordemOperacoes.push({select: null, where: null, join: null, projecao: {campo: campo1, tabela:  tabela1 }})
-      ordemOperacoes.push({select: null, where: null, join: null, projecao: {campo: campo2, tabela:  tabela2 }})
+      this.ordemOperacoes.push({ select: null, join: tabela1 + " |X| " + campo1 + " = " + campo2 + " " + tabela2, projecao: null })
+      this.ordemOperacoes.push({ select: null, join: null, projecao: { campo: campo1, tabela: tabela1 } })
+      this.ordemOperacoes.push({ select: null, join: null, projecao: { campo: campo2, tabela: tabela2 } })
     })
-
     campos.map(c => {
       let splitedCampo = c.split(" ")
       let campo = splitedCampo[0]
@@ -199,16 +198,29 @@ export class AppComponent implements OnInit {
       this.tables.forEach(table => {
         table.tabela.forEach(campoTabela => {
           if (campo == campoTabela) {
-            ordemOperacoes.push({select: null, where: null, join: null, projecao: {campo: campo, tabela:  table.nome }})
+            this.ordemOperacoes.push({ select: null, join: null, projecao: { campo: campo, tabela: table.nome } })
           }
         })
       });
-      
-    })
-    console.log(ordemOperacoes)
-    console.log(this.selectsFiltered)
-    console.log(this.selects)
-  }
 
+    })
+    console.log(this.ordemOperacoes)
+    this.projecaoPrincipal = ''
+    campos.map(e => {
+      if (e.split('.')[1]) {
+        this.projecaoPrincipal = this.projecaoPrincipal + ' ' + e.split('.')[1]
+      } else {
+        this.projecaoPrincipal = this.projecaoPrincipal + ' ' + e
+      }
+    })
+    this.ordemOperacoes.map(e => {
+      if (e.join) this.juncoes.push(e)
+    })
+    this.tabelas.map((tabela, index) => {
+      this.ordemOperacoes.forEach(elem => {
+        // if (elem.projecao && elem.projecao.tabela == tabela) this.teste.push({projecao: elem.projecao.campo})
+      })
+    })
+  }
 }
 

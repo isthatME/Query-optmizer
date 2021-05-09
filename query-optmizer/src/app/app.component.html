@@ -5,13 +5,22 @@
 <div class="tree">
     <ul>
         <li>
-            <a href="#">Parent</a>
-            <ul>
+            <a href="#">{{ projecaoPrincipal }}</a>
+            <!-- adiciona elemento pai -->
+            <ul *ngFor="let juncao of juncoes">
                 <li>
+                    <a href="#">{{ juncao.join }}</a>
+                    <!-- adiciona elemento pai -->
                     <ul>
-                        <li *ngFor="let item of selectsFiltered; let i = index">
-                            <p style="font-size: 10px;">{{ item.condicoes }}</p>
-                            <a href="#">{{ item.tabela }}</a>
+                        <!-- adiciona elemento filho ao lado -->
+                        <li *ngFor="let tabela of tabelas">
+                            <!-- adiciona elemento neto abaixo -->
+                            <ul >
+                                <!-- adiciona elemento neto abaixo -->
+                                <li>
+                                    <a href="#">{{ tabela }}</a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </li>
@@ -19,48 +28,3 @@
         </li>
     </ul>
 </div>
-
-
-<!-- <div class="tree">
-    <ul>
-        <li>
-            <a href="#">Parent</a>
-            <ul>
-                <li>
-                    <a href="#">Child</a>
-                    <ul>
-                        <li>
-                            <a href="#">Grand Child</a>
-                        </li>
-                        <li>
-                            <a href="#">Grand Child</a>
-                            <ul>
-                                <li>
-                                    <a href="#">Grand Child</a>
-                                </li>
-                                <li>
-                                    <a href="#">Grand Child</a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="#">Child</a>
-                    <ul>
-                        <li>
-                            <a href="#">Grand Child</a>
-                            <ul>
-                                <li>
-                                    <a href="#">Grand Grand Child</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a href="#">Grand Child</a>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </li>
-    </ul> -->
