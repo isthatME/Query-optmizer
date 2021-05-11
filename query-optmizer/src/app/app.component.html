@@ -9,16 +9,28 @@
             <!-- adiciona elemento pai -->
             <ul *ngFor="let juncao of juncoes">
                 <li>
-                    <a href="#">{{ juncao.join }}</a>
+                    <a href="#" *ngIf="juncao">{{ juncao.join }}</a>
                     <!-- adiciona elemento pai -->
                     <ul>
                         <!-- adiciona elemento filho ao lado -->
-                        <li *ngFor="let tabela of tabelas">
+                        <li *ngFor="let item of juncao.campos">
                             <!-- adiciona elemento neto abaixo -->
-                            <ul >
+                            <ul>
                                 <!-- adiciona elemento neto abaixo -->
                                 <li>
-                                    <a href="#">{{ tabela }}</a>
+                                    <a href="#">{{ item.campo }}</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <!-- adiciona elemento neto abaixo -->
+                                <li>
+                                    <a href="#">{{ item.condicao }}</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <!-- adiciona elemento neto abaixo -->
+                                <li>
+                                    <a href="#">{{ item.tabela }}</a>
                                 </li>
                             </ul>
                         </li>

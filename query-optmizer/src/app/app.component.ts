@@ -129,13 +129,6 @@ export class AppComponent implements OnInit {
         }
         i++;
       }
-
-      // console.log('valido: ', this.verificadorDeQuery(campos, tabelas))
-      // console.log("tabelas: ", tabelas)
-      // console.log("campos: ", campos)
-      // console.log("joins: ", joins)
-      // console.log("wheres: ", wheres)
-      // console.log("orders: ", orders)
     }
 
     //OPERACOES
@@ -177,7 +170,7 @@ export class AppComponent implements OnInit {
           condicao = condicao + elem.condicao + ' '
         }
       })
-      this.selectsFiltered[i] = ({ tabela: e, condicoes: condicao })
+      this.selectsFiltered[i] = ({ tabela: e, condicao: condicao })
     })
     joins.map(join => {
       let splitedJoin = join.trim().split(" ")
@@ -204,7 +197,7 @@ export class AppComponent implements OnInit {
       });
 
     })
-    console.log(this.ordemOperacoes)
+    // console.log(this.ordemOperacoes)
     this.projecaoPrincipal = ''
     campos.map(e => {
       if (e.split('.')[1]) {
@@ -213,14 +206,13 @@ export class AppComponent implements OnInit {
         this.projecaoPrincipal = this.projecaoPrincipal + ' ' + e
       }
     })
+    let objCamposTabela = {}
     this.ordemOperacoes.map(e => {
-      if (e.join) this.juncoes.push(e)
+      if (e.join) this.juncoes.push({join: e.join, campos: this.selectsFiltered})
     })
-    this.tabelas.map((tabela, index) => {
-      this.ordemOperacoes.forEach(elem => {
-        // if (elem.projecao && elem.projecao.tabela == tabela) this.teste.push({projecao: elem.projecao.campo})
-      })
-    })
+
+    console.log(this.juncoes)
+    console.log(this.ordemOperacoes)
   }
 }
 
