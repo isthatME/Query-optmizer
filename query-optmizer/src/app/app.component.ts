@@ -13,6 +13,7 @@ export class AppComponent implements OnInit {
 
   operadores: string[] = ['=', '>', '<', '<=', '>=', '<', '>', 'AND', 'OR', 'IN', 'NOT IN', 'LIKE'];
   operacoes: string[] = ['SELECT', 'WHERE', 'JOIN', 'ORDER BY'];
+
   //tabelas
   tables: Tabela[] = [
     { nome: "USUARIO", tabela: ['IDUSUARIO', 'NOME', 'LOGRADOURO', 'NUMERO', 'BAIRRO', 'CEP', 'UF', 'DATANASCIMENTO'] },
@@ -23,7 +24,6 @@ export class AppComponent implements OnInit {
     { nome: "TIPOMOVIMENTO", tabela: ['IDTIPOMOVIMENTO', 'DESCMOVIMENTACAO'] }
   ]
 
-  ordemOperacoes = []
   form: FormGroup;
 
   //variaveis para exibição
@@ -32,14 +32,18 @@ export class AppComponent implements OnInit {
   tabelas = []
 
   splitedString: string[];
-  selects = []
-  selectsFiltered = [];
+  operations = []
   query: string =
     `SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO 
     JOIN CONTAS  
     ON CONTAS.USUARIO_IDUSUARIO = USUARIO.IDUSUARIO
-    WHERE NUMERO > 10 AND BAIRRO = 'CENTRO' AND SALDOINICIAL = 0
+    WHERE NUMERO > 10 AND BAIRRO > 'CENTRO' AND SALDOINICIAL = 0
     ORDER BY BAIRRO, NUMERO, NOME`
+  
+  query2: string =
+  `SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO 
+  WHERE NUMERO > 10 AND BAIRRO > 'CENTRO'
+  ORDER BY BAIRRO, NUMERO, NOME`
 
   ngOnInit() {
     this.analizadorLexico(this.query);
@@ -47,19 +51,23 @@ export class AppComponent implements OnInit {
       query: [null, Validators.required]
     })
   }
+
   onSubmit(form: FormGroup) {
   }
+
   verificadorDeQuery(campos, tabelas): boolean {
     var tableInc = 0;
     var fieldInc = 0;
 
 
     tabelas.forEach(tabela => {
-      this.tables.map(elem => { if (elem.nome == tabela) tableInc++ })
+      this.tables.map(elem => { 
+        if (elem.nome == tabela) tableInc++ 
+      })
     });
 
     campos.forEach(campo => {
-      // caso haja especificação da tabela no campo a ser projetado, damos um split e pegamos apenas o nome da tabela, ex: USUARIO.NOME obteremos apenas NOME
+      // caso haja especificação da tabela no campo a ser projetado, damos um split e pegamos apenas o nome do campo, ex: USUARIO.NOME obteremos apenas NOME
       if (campo.split('.').length == 2) {
         var tabelaValida = false
         for (var i = 0; i < tabelas.length; ++i) {
@@ -82,10 +90,12 @@ export class AppComponent implements OnInit {
   analizadorLexico(str) {
     this.splitedString = str.split(/,| /).filter(e => e != '' && e != '\n')
     var campos = []
+    var camposSelect = []
     var joins = []
     var wheres = []
     var orders = []
-    this.selectsFiltered = Array(this.tabelas.length).fill(null)
+
+    // Pega tabelas da query
     this.splitedString.map((item, index) => {
       if (item == "FROM") {
         this.tabelas.push(this.splitedString[index + 1])
@@ -94,15 +104,21 @@ export class AppComponent implements OnInit {
       }
     })
 
+    // Verifica se a query inicia com "SELECT"
     if (this.splitedString[0].toUpperCase() == 'SELECT') {
       var i = 1
       var j = 1
+      // Pega os campos do "SELECT" até o "FROM"
       while (this.splitedString[i].toUpperCase() != "FROM") {
         campos.push(this.splitedString[i].toUpperCase())
+        camposSelect.push(this.splitedString[i].toUpperCase())
         i++;
       }
 
+      // Analisa a query após o "FROM"
       while (i < this.splitedString.length) {
+
+        // Pega os "JOIN" da query
         if (this.splitedString[i].toUpperCase() == "JOIN") {
           joins.push(this.splitedString[i + 1].toUpperCase().trim() + " " +
             this.splitedString[i + 2].toUpperCase().trim() + " " +
@@ -110,8 +126,12 @@ export class AppComponent implements OnInit {
             this.splitedString[i + 4].toUpperCase().trim() + " " +
             this.splitedString[i + 5].toUpperCase().trim()
           )
+          // Pega os campos que são usados para fazer o join
+          campos.push(this.splitedString[i + 3].toUpperCase().trim().split('.')[1])
+          campos.push(this.splitedString[i + 5].toUpperCase().trim().split('.')[1])
         }
 
+        // Pega os "WHERE" da query
         if (this.splitedString[i].toUpperCase() == "WHERE" || this.splitedString[i].toUpperCase() == "AND") {
           wheres.push(this.splitedString[i + 1].toUpperCase() + " " +
             this.splitedString[i + 2].toUpperCase().trim() + " " +
@@ -119,6 +139,7 @@ export class AppComponent implements OnInit {
           )
         }
 
+        // Pega os "ORDER" da query
         if (this.splitedString[i].toUpperCase() == "ORDER") {
           i += 2
           while (i < this.splitedString.length) {
@@ -128,14 +149,28 @@ export class AppComponent implements OnInit {
           break;
         }
         i++;
-      }
+      }      
     }
 
     //OPERACOES
 
-    var obj = []
+    var tableJoins = []
+    var tableProjections = []
+    var tableSelects = []
+    var orderedSelects = []
+
+    // Monta array com os joins
+    joins.map(join => {
+      let splitedJoin = join.trim().split(" ")
+      let tabela1 = splitedJoin[2].split(".")[0]
+      let campo1 = splitedJoin[2].split(".")[1]
+      let tabela2 = splitedJoin[4].split(".")[0]
+      let campo2 = splitedJoin[4].split(".")[1]
+      tableJoins.push(tabela1 + " |X| " + campo1 + " = " + campo2 + " " + tabela2)
+    })
+
+    // Descobrindo tabela de cada where
     wheres.map(where => {
-      // console.log(where)
       let splitedWhere = where.split(" ")
       let campo = splitedWhere[0]
       if (campo.split('.').length == 2) {
@@ -149,39 +184,21 @@ export class AppComponent implements OnInit {
           }
         })
       });
-      this.ordemOperacoes.push({ select: { campo: where, tabela: tabela }, join: null, projecao: null })
 
-      this.tabelas.map((tab, index) => {
-        if (tabela == tab) {
-          obj.push({ tabela: tabela, condicao: where })
-        }
-      })
+      // Ordenando selects pelo operador mais restritivo      
       if (where.split(' ')[1] == '=') {
-        this.selects.unshift({ campo: where.split(' ')[0], operador: where.split(' ')[1], operando: where.split(' ')[2], tabela: tabela })
+        orderedSelects.unshift({ where: where.split(' ')[0] + ' ' + where.split(' ')[1] + ' ' + where.split(' ')[2], tabela: tabela })
       } else {
+        orderedSelects.push({ where: where.split(' ')[0] + ' ' + where.split(' ')[1] + ' ' + where.split(' ')[2], tabela: tabela })
+      }      
+    })
 
-        this.selects.push({ campo: where.split(' ')[0], operador: where.split(' ')[1], operando: where.split(' ')[2], tabela: tabela })
-      }
-    })
-    this.tabelas.map((e, i) => {
-      var condicao = ''
-      obj.forEach((elem, index) => {
-        if (elem.tabela == e) {
-          condicao = condicao + elem.condicao + ' '
-        }
-      })
-      this.selectsFiltered[i] = ({ tabela: e, condicao: condicao })
-    })
-    joins.map(join => {
-      let splitedJoin = join.trim().split(" ")
-      let tabela1 = splitedJoin[2].split(".")[0]
-      let campo1 = splitedJoin[2].split(".")[1]
-      let tabela2 = splitedJoin[4].split(".")[0]
-      let campo2 = splitedJoin[4].split(".")[1]
-      this.ordemOperacoes.push({ select: null, join: tabela1 + " |X| " + campo1 + " = " + campo2 + " " + tabela2, projecao: null })
-      this.ordemOperacoes.push({ select: null, join: null, projecao: { campo: campo1, tabela: tabela1 } })
-      this.ordemOperacoes.push({ select: null, join: null, projecao: { campo: campo2, tabela: tabela2 } })
-    })
+    // Montando array com cada select e sua respectiva tabela
+    orderedSelects.map( e => {
+      tableSelects.push({tabela: e.tabela, select: e.where})
+    })    
+
+    // Montando array com cada projection e sua respectiva tabela
     campos.map(c => {
       let splitedCampo = c.split(" ")
       let campo = splitedCampo[0]
@@ -191,28 +208,52 @@ export class AppComponent implements OnInit {
       this.tables.forEach(table => {
         table.tabela.forEach(campoTabela => {
           if (campo == campoTabela) {
-            this.ordemOperacoes.push({ select: null, join: null, projecao: { campo: campo, tabela: table.nome } })
+            tableProjections.push({tabela: table.nome, campo: campo})
           }
         })
       });
-
     })
-    // console.log(this.ordemOperacoes)
-    this.projecaoPrincipal = ''
-    campos.map(e => {
+
+    // Montando cada tabela com seus selects e projeções
+    this.tabelas.map((tabela, i) => {
+
+      // Preparando os selects da tabela
+      var select = ''
+      tableSelects.forEach((table, index) => {
+        if (table.tabela == tabela) {
+          select = select + table.select + ' '
+        }
+      })
+
+      // Preparando as projections da tabela
+      var projection = ''
+      tableProjections.forEach((table, index) => {
+        if (table.tabela == tabela) {
+          projection = projection + table.campo + ' '
+        }
+      })
+
+      this.operations[i] = ({ tabela: tabela, selects: 'SIGMA ( ' + select + ')', projections: 'PI ( ' + projection + ')'})
+    })
+
+    // Montando projeção dos campos que estão no SELECT da query
+    this.projecaoPrincipal = 'PI ('
+    camposSelect.map(e => {
       if (e.split('.')[1]) {
         this.projecaoPrincipal = this.projecaoPrincipal + ' ' + e.split('.')[1]
       } else {
         this.projecaoPrincipal = this.projecaoPrincipal + ' ' + e
       }
     })
-    let objCamposTabela = {}
-    this.ordemOperacoes.map(e => {
-      if (e.join) this.juncoes.push({join: e.join, campos: this.selectsFiltered})
+    this.projecaoPrincipal = this.projecaoPrincipal + ' )'
+
+    tableJoins.map(join => {
+      if (join) {
+        this.juncoes.push({join: join, operacoes: this.operations})
+      }
     })
 
     console.log(this.juncoes)
-    console.log(this.ordemOperacoes)
   }
 }
 

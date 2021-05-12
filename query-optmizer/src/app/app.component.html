@@ -13,18 +13,18 @@
                     <!-- adiciona elemento pai -->
                     <ul>
                         <!-- adiciona elemento filho ao lado -->
-                        <li *ngFor="let item of juncao.campos">
+                        <li *ngFor="let item of juncao.operacoes">
                             <!-- adiciona elemento neto abaixo -->
                             <ul>
                                 <!-- adiciona elemento neto abaixo -->
                                 <li>
-                                    <a href="#">{{ item.campo }}</a>
+                                    <a href="#">{{ item.projections }}</a>
                                 </li>
                             </ul>
                             <ul>
                                 <!-- adiciona elemento neto abaixo -->
                                 <li>
-                                    <a href="#">{{ item.condicao }}</a>
+                                    <a href="#">{{ item.selects }}</a>
                                 </li>
                             </ul>
                             <ul>
