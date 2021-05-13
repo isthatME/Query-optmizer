@@ -39,17 +39,17 @@ export class AppComponent implements OnInit {
     ON CONTAS.USUARIO_IDUSUARIO = USUARIO.IDUSUARIO
     WHERE NUMERO > 10 AND BAIRRO > 'CENTRO' AND SALDOINICIAL = 0
     ORDER BY BAIRRO, NUMERO, NOME`
-  
+
   query2: string =
-  `SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO 
+    `SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO 
   WHERE NUMERO > 10 AND BAIRRO > 'CENTRO'
   ORDER BY BAIRRO, NUMERO, NOME`
 
   ngOnInit() {
-    this.analizadorLexico(this.query);
     this.form = this.fb.group({
       query: [null, Validators.required]
     })
+    this.analizadorLexico(this.query2);
   }
 
   onSubmit(form: FormGroup) {
@@ -61,8 +61,8 @@ export class AppComponent implements OnInit {
 
 
     tabelas.forEach(tabela => {
-      this.tables.map(elem => { 
-        if (elem.nome == tabela) tableInc++ 
+      this.tables.map(elem => {
+        if (elem.nome == tabela) tableInc++
       })
     });
 
@@ -149,7 +149,7 @@ export class AppComponent implements OnInit {
           break;
         }
         i++;
-      }      
+      }
     }
 
     //OPERACOES
@@ -190,13 +190,16 @@ export class AppComponent implements OnInit {
         orderedSelects.unshift({ where: where.split(' ')[0] + ' ' + where.split(' ')[1] + ' ' + where.split(' ')[2], tabela: tabela })
       } else {
         orderedSelects.push({ where: where.split(' ')[0] + ' ' + where.split(' ')[1] + ' ' + where.split(' ')[2], tabela: tabela })
-      }      
+      }
+      this.tabelas = []
+      // ordenando tabelas de prioridade do select 
+      orderedSelects.map(select => { if (!this.tabelas.find(tabelaExistente => tabelaExistente == select.tabela)) this.tabelas.push(select.tabela) })
     })
 
     // Montando array com cada select e sua respectiva tabela
-    orderedSelects.map( e => {
-      tableSelects.push({tabela: e.tabela, select: e.where})
-    })    
+    orderedSelects.map(e => {
+      tableSelects.push({ tabela: e.tabela, select: e.where })
+    })
 
     // Montando array com cada projection e sua respectiva tabela
     campos.map(c => {
@@ -208,7 +211,7 @@ export class AppComponent implements OnInit {
       this.tables.forEach(table => {
         table.tabela.forEach(campoTabela => {
           if (campo == campoTabela) {
-            tableProjections.push({tabela: table.nome, campo: campo})
+            tableProjections.push({ tabela: table.nome, campo: campo })
           }
         })
       });
@@ -233,7 +236,7 @@ export class AppComponent implements OnInit {
         }
       })
 
-      this.operations[i] = ({ tabela: tabela, selects: 'SIGMA ( ' + select + ')', projections: 'PI ( ' + projection + ')'})
+      this.operations[i] = ({ tabela: tabela, selects: 'SIGMA ( ' + select + ')', projections: 'PI ( ' + projection + ')' })
     })
 
     // Montando projeção dos campos que estão no SELECT da query
@@ -246,12 +249,13 @@ export class AppComponent implements OnInit {
       }
     })
     this.projecaoPrincipal = this.projecaoPrincipal + ' )'
-
-    tableJoins.map(join => {
-      if (join) {
-        this.juncoes.push({join: join, operacoes: this.operations})
-      }
-    })
+    if (tableJoins.length != 0) {
+      tableJoins.map(join => {
+        this.juncoes.push({ join: join, operacoes: this.operations })
+      })
+    } else {
+      this.juncoes.push({ join: null, operations: this.operations })
+    }
 
     console.log(this.juncoes)
   }

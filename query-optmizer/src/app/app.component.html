@@ -1,7 +1,7 @@
-<!-- <form [formGroup]="form">
+<form [formGroup]="form">
     <textarea matInput formControlName="query" placeholder="Ex. SELECT * FROM TAB" class="text-area"></textarea>
     <button (click)="onSubmit(form)">Otimizar</button>
-</form> -->
+</form>
 <div class="tree">
     <ul>
         <li>
@@ -9,11 +9,35 @@
             <!-- adiciona elemento pai -->
             <ul *ngFor="let juncao of juncoes">
                 <li>
-                    <a href="#" *ngIf="juncao">{{ juncao.join }}</a>
+                    <a href="#" *ngIf="juncao.join">{{ juncao.join }}</a>
                     <!-- adiciona elemento pai -->
-                    <ul>
+                    <ul *ngIf="juncao.join">
                         <!-- adiciona elemento filho ao lado -->
                         <li *ngFor="let item of juncao.operacoes">
+                            <!-- adiciona elemento neto abaixo -->
+                            <ul>
+                                <!-- adiciona elemento neto abaixo -->
+                                <li>
+                                    <a href="#">{{ item.projections }}</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <!-- adiciona elemento neto abaixo -->
+                                <li>
+                                    <a href="#">{{ item.selects }}</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <!-- adiciona elemento neto abaixo -->
+                                <li>
+                                    <a href="#">{{ item.tabela }}</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul *ngIf="!juncao.join">
+                        <!-- adiciona elemento filho ao lado -->
+                        <li *ngFor="let item of juncao.operations">
                             <!-- adiciona elemento neto abaixo -->
                             <ul>
                                 <!-- adiciona elemento neto abaixo -->
