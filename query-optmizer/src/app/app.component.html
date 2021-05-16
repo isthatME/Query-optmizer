@@ -1,8 +1,10 @@
-<form [formGroup]="form">
-    <textarea matInput formControlName="query" placeholder="Ex. SELECT * FROM TAB" class="text-area"></textarea>
-    <button (click)="onSubmit(form)">Otimizar</button>
-</form>
-<div class="tree">
+<div class="form">
+    <form [formGroup]="form">
+        <textarea matInput  rows="6" formControlName="query" placeholder="Ex. SELECT * FROM TAB" class="text-area"></textarea>
+    </form>
+    <button mat-raised-button (click)="onSubmit(form)">Otimizar</button>
+</div>
+<div class="tree" *ngIf="isValid"> 
     <ul>
         <li>
             <a href="#">{{ projecaoPrincipal }}</a>

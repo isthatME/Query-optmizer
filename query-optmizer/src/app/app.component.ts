@@ -37,22 +37,26 @@ export class AppComponent implements OnInit {
     `SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO 
     JOIN CONTAS  
     ON CONTAS.USUARIO_IDUSUARIO = USUARIO.IDUSUARIO
-    WHERE NUMERO > 10 AND BAIRRO > 'CENTRO' AND SALDOINICIAL = 0
+    WHERE NUMERO > 10 AND BAIRRO = 'CENTRO' AND SALDOINICIAL > 0
     ORDER BY BAIRRO, NUMERO, NOME`
 
   query2: string =
     `SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO 
   WHERE NUMERO > 10 AND BAIRRO > 'CENTRO'
   ORDER BY BAIRRO, NUMERO, NOME`
-
+  isValid = false;
   ngOnInit() {
     this.form = this.fb.group({
       query: [null, Validators.required]
     })
-    this.analizadorLexico(this.query2);
   }
 
   onSubmit(form: FormGroup) {
+    this.juncoes = []
+    this.projecaoPrincipal = ''
+    this.query = form.value.query
+    this.analizadorLexico(this.query);
+    this.isValid = true;
   }
 
   verificadorDeQuery(campos, tabelas): boolean {

@@ -1,9 +1,21 @@
 body {
     font-family: sans-serif;
   }
- form{
-    width: 6rem;
-  }
+.form{
+  display: flex;
+  width: 100%;
+  justify-content: center;  
+  margin-top: 3rem  ;
+}
+.form button  {
+  height: 3rem;
+  margin-left: 1rem;
+  align-self: center;
+}
+.form textarea {
+  width: 50rem;
+  padding: 1rem;
+}
   $border-width: 1px;
   $reverse: false;
   
