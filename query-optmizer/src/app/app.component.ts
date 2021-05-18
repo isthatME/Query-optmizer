@@ -228,31 +228,35 @@ export class AppComponent implements OnInit {
       var select = ''
       tableSelects.forEach((table, index) => {
         if (table.tabela == tabela) {
-          select = select + table.select + ' '
+          select = select + '^ ' + table.select + ' '
         }
       })
+      select = select.substring(2)
 
       // Preparando as projections da tabela
       var projection = ''
       tableProjections.forEach((table, index) => {
         if (table.tabela == tabela) {
-          projection = projection + table.campo + ' '
+          projection = projection + ', ' + table.campo
         }
       })
+      projection = projection.substring(2)
 
-      this.operations[i] = ({ tabela: tabela, selects: tableSelects.length != 0 ? 'SIGMA ( ' + select + ')': null, projections: 'PI ( ' + projection + ')' })
+      this.operations[i] = ({ tabela: tabela, selects: tableSelects.length != 0 ? 'SIGMA ( ' + select + ' )': null, projections: 'PI ( ' + projection + ' )' })
     })
 
     // Montando projeção dos campos que estão no SELECT da query
-    this.projecaoPrincipal = 'PI ('
+    this.projecaoPrincipal = 'PI ( '
     camposSelect.map(e => {
       if (e.split('.')[1]) {
-        this.projecaoPrincipal = this.projecaoPrincipal + ' ' + e.split('.')[1]
+        this.projecaoPrincipal = this.projecaoPrincipal + e.split('.')[1] + ', '
       } else {
-        this.projecaoPrincipal = this.projecaoPrincipal + ' ' + e
+        this.projecaoPrincipal = this.projecaoPrincipal + e + ', '
       }
     })
+    this.projecaoPrincipal = this.projecaoPrincipal.substring(0, this.projecaoPrincipal.length - 2)
     this.projecaoPrincipal = this.projecaoPrincipal + ' )'
+
     if (tableJoins.length != 0) {
       tableJoins.map(join => {
         this.juncoes.push({ join: join, operacoes: this.operations })
@@ -262,6 +266,7 @@ export class AppComponent implements OnInit {
     }
     console.log(this.juncoes)
   }
+
   getField(str) {
     let splitedString = str.split(/,| /).filter(e => e != '' && e != '\n')
     let campos = []
