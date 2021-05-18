@@ -2,8 +2,8 @@
     <form [formGroup]="form">
         <textarea matInput rows="6" formControlName="query" placeholder="Ex. SELECT * FROM TAB"
             class="text-area"></textarea>
-            <!-- <mat-error>teste</mat-error> -->
-        </form>
+        <!-- <mat-error>teste</mat-error> -->
+    </form>
     <button mat-raised-button (click)="onSubmit(form)">Otimizar</button>
 </div>
 <div class="tree" *ngIf="isValid">
@@ -25,10 +25,10 @@
                                     <a href="#">{{ item.projections }}</a>
                                 </li>
                             </ul>
-                            <ul >
+                            <ul *ngIf="item.selects">
                                 <!-- adiciona elemento neto abaixo -->
                                 <li>
-                                    <a href="#" >{{ item.selects }}</a>
+                                    <a href="#">{{ item.selects }}</a>
                                 </li>
                             </ul>
                             <ul>
@@ -42,13 +42,6 @@
                     <ul *ngIf="!juncao.join">
                         <!-- adiciona elemento filho ao lado -->
                         <li *ngFor="let item of juncao.operacoes">
-                            <!-- adiciona elemento neto abaixo -->
-                            <ul *ngIf="item.selects">
-                                <!-- adiciona elemento neto abaixo -->
-                                <li>
-                                    <a href="#">{{ item.projections }}</a>
-                                </li>
-                            </ul>
                             <ul *ngIf="item.selects">
                                 <!-- adiciona elemento neto abaixo -->
                                 <li>
@@ -67,4 +60,10 @@
             </ul>
         </li>
     </ul>
+</div>
+<div style="display: flex; justify-content: center; width: 100%; margin-top: 5rem;" *ngIf="!isValid">
+    <div>
+        <p style="text-align: center; font-weight: bold; font-size: 2rem">Essa query não é valida</p>
+        <img src="../assets/undraw_void_3ggu.svg" alt="" style="height: 300px; width: 300px;">
+    </div>
 </div>

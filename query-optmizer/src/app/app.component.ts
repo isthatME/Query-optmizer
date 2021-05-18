@@ -44,19 +44,18 @@ export class AppComponent implements OnInit {
     `SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO 
   WHERE NUMERO > 10 AND BAIRRO > 'CENTRO'
   ORDER BY BAIRRO, NUMERO, NOME`
-  isValid = false;
+  isValid = true;
   ngOnInit() {
     this.form = this.fb.group({
-      query: ["SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO", Validators.required]
+      query: ["SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO       JOIN CONTAS        ON CONTAS.USUARIO_IDUSUARIO = USUARIO.IDUSUARIO      WHERE NUMERO > 10 AND BAIRRO = CENTRO    ORDER BY BAIRRO, NUMERO, NOME", Validators.required]
     })
   }
 
   onSubmit(form: FormGroup) {
     this.juncoes = []
     this.projecaoPrincipal = ''
-    this.analizadorLexico(form.value.query);
     this.isValid = true;
-    this.verificadorDeQuery(this.getField(form.value.query), this.getTables())
+    this.analizadorLexico(form.value.query) &&  this.verificadorDeQuery(this.getField(form.value.query), this.getTables()) == false ? this.isValid = false : this.isValid = true
   }
 
   verificadorDeQuery(campos, tabelas): boolean {
@@ -66,7 +65,7 @@ export class AppComponent implements OnInit {
 
     tabelas.forEach(tabela => {
       this.tables.map(elem => {
-        if (elem.nome == tabela) tableInc++
+        if (elem.nome == tabela) tableInc++ // 2
       })
     });
 
@@ -91,7 +90,7 @@ export class AppComponent implements OnInit {
     return tableInc == tabelas.length && fieldInc == campos.length;
   }
 
-  analizadorLexico(str) {
+  analizadorLexico(str): boolean {
     this.splitedString = str.split(/,| /).filter(e => e != '' && e != '\n')
     var campos = []
     var camposSelect = []
@@ -154,7 +153,7 @@ export class AppComponent implements OnInit {
         }
         i++;
       }
-    }
+    } else{ return false}
 
     //OPERACOES
 
@@ -162,6 +161,7 @@ export class AppComponent implements OnInit {
     var tableProjections = []
     var tableSelects = []
     var orderedSelects = []
+    var tabelasAux = []
 
     // Monta array com os joins
     joins.map(join => {
@@ -195,15 +195,16 @@ export class AppComponent implements OnInit {
       } else {
         orderedSelects.push({ where: where.split(' ')[0] + ' ' + where.split(' ')[1] + ' ' + where.split(' ')[2], tabela: tabela })
       }
-      this.tabelas = []
+
       // ordenando tabelas de prioridade do select 
-      orderedSelects.map(select => { if (!this.tabelas.find(tabelaExistente => tabelaExistente == select.tabela)) this.tabelas.push(select.tabela) })
     })
+    orderedSelects.map(select => { if (!tabelasAux.find(tabelaExistente => tabelaExistente == select.tabela)) tabelasAux.push(select.tabela) })
 
     // Montando array com cada select e sua respectiva tabela
     orderedSelects.map(e => {
       tableSelects.push({ tabela: e.tabela, select: e.where })
     })
+
 
     // Montando array com cada projection e sua respectiva tabela
     campos.map(c => {
@@ -222,7 +223,9 @@ export class AppComponent implements OnInit {
     })
 
     // Montando cada tabela com seus selects e projeções
-    this.tabelas.map((tabela, i) => {
+    let tableToBeMapped = []
+    this.tabelas.length == tabelasAux.length ? tableToBeMapped = tabelasAux : tableToBeMapped = this.tabelas
+    tableToBeMapped.map((tabela, i) => {
 
       // Preparando os selects da tabela
       var select = ''
@@ -242,7 +245,7 @@ export class AppComponent implements OnInit {
       })
       projection = projection.substring(2)
 
-      this.operations[i] = ({ tabela: tabela, selects: tableSelects.length != 0 ? 'SIGMA ( ' + select + ' )': null, projections: 'PI ( ' + projection + ' )' })
+      this.operations[i] = ({ tabela: tabela, selects: select ? 'SIGMA ( ' + select + ' )' : null, projections: 'PI ( ' + projection + ' )' })
     })
 
     // Montando projeção dos campos que estão no SELECT da query
@@ -264,27 +267,32 @@ export class AppComponent implements OnInit {
     } else {
       this.juncoes.push({ join: null, operacoes: this.operations })
     }
-    console.log(this.juncoes)
+    var contador = 0
+    this.juncoes.forEach(e => {
+
+
+    })
+    return true
   }
 
   getField(str) {
     let splitedString = str.split(/,| /).filter(e => e != '' && e != '\n')
-    let campos = []
+    let camposx = []
     if (splitedString[0].toUpperCase() == 'SELECT') {
       var i = 1
       var j = 1
       // Pega os campos do "SELECT" até o "FROM"
       while (splitedString[i].toUpperCase() != "FROM") {
-        campos.push(splitedString[i].toUpperCase())
+        camposx.push(splitedString[i].toUpperCase())
         i++;
       }
     }
-    return campos
+    return camposx
   }
   getTables() {
-    let tables = []
-    this.juncoes.filter(e => e.operacoes.filter(x => tables.push(x.tabela)))
-    return tables
+    let tablesx = []
+    this.juncoes.filter(e => e.operacoes.filter(x => tablesx.push(x.tabela)))
+    return tablesx
   }
 }
 
