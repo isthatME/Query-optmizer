@@ -47,16 +47,16 @@ export class AppComponent implements OnInit {
   isValid = false;
   ngOnInit() {
     this.form = this.fb.group({
-      query: [null, Validators.required]
+      query: ["SELECT USUARIO.NOME, USUARIO.CEP,NUMERO  FROM  USUARIO", Validators.required]
     })
   }
 
   onSubmit(form: FormGroup) {
     this.juncoes = []
     this.projecaoPrincipal = ''
-    this.query = form.value.query
-    this.analizadorLexico(this.query);
+    this.analizadorLexico(form.value.query);
     this.isValid = true;
+    this.verificadorDeQuery(this.getField(form.value.query), this.getTables())
   }
 
   verificadorDeQuery(campos, tabelas): boolean {
@@ -240,7 +240,7 @@ export class AppComponent implements OnInit {
         }
       })
 
-      this.operations[i] = ({ tabela: tabela, selects: 'SIGMA ( ' + select + ')', projections: 'PI ( ' + projection + ')' })
+      this.operations[i] = ({ tabela: tabela, selects: tableSelects.length != 0 ? 'SIGMA ( ' + select + ')': null, projections: 'PI ( ' + projection + ')' })
     })
 
     // Montando projeção dos campos que estão no SELECT da query
@@ -258,10 +258,28 @@ export class AppComponent implements OnInit {
         this.juncoes.push({ join: join, operacoes: this.operations })
       })
     } else {
-      this.juncoes.push({ join: null, operations: this.operations })
+      this.juncoes.push({ join: null, operacoes: this.operations })
     }
-
     console.log(this.juncoes)
+  }
+  getField(str) {
+    let splitedString = str.split(/,| /).filter(e => e != '' && e != '\n')
+    let campos = []
+    if (splitedString[0].toUpperCase() == 'SELECT') {
+      var i = 1
+      var j = 1
+      // Pega os campos do "SELECT" até o "FROM"
+      while (splitedString[i].toUpperCase() != "FROM") {
+        campos.push(splitedString[i].toUpperCase())
+        i++;
+      }
+    }
+    return campos
+  }
+  getTables() {
+    let tables = []
+    this.juncoes.filter(e => e.operacoes.filter(x => tables.push(x.tabela)))
+    return tables
   }
 }
 
