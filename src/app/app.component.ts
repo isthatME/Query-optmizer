@@ -17,7 +17,7 @@ export class AppComponent implements OnInit {
   //tabelas
   tables: Tabela[] = [
     { nome: "USUARIO", tabela: ['IDUSUARIO', 'NOME', 'LOGRADOURO', 'NUMERO', 'BAIRRO', 'CEP', 'UF', 'DATANASCIMENTO'] },
-    { nome: "CONTAS", tabela: ['IDCONTA', 'DESCRICAO', 'TIPOCONTA_IDTIPOCONTA', 'USUARIO_IDUSUARIO', 'SALDOINICIAL'] },
+    { nome: "CONTAS", tabela: ['IDCONTA','TIPOCONTA_IDTIPOCONTA', 'USUARIO_IDUSUARIO', 'SALDOINICIAL','descricao'] },
     { nome: "TIPOCONTA", tabela: ['IDTIPOCONTA', 'DESCRICAO'] },
     { nome: "CATEGORIA", tabela: ['IDCATEGORIA', 'DESCCATEGORIA'] },
     { nome: "MOVIMENTACAO", tabela: ['IDMOVIMENTACAO', 'DATAMOVIMENTACAO', 'DESCRICAO', 'TIPOMOVIMENTO_IDTIPOMOVIMENTO', 'CATEGORIA_IDCATEGORIA', 'CONTAS_IDCONTA', 'VALOR'] },
@@ -55,7 +55,7 @@ export class AppComponent implements OnInit {
     this.juncoes = []
     this.projecaoPrincipal = ''
     this.isValid = true;
-    this.analizadorLexico(form.value.query) &&  this.verificadorDeQuery(this.getField(form.value.query), this.getTables()) == false ? this.isValid = false : this.isValid = true
+    this.analizadorLexico(form.value.query) && this.verificadorDeQuery(this.getField(form.value.query), this.getTables()) == false ? this.isValid = false : this.isValid = true
   }
 
   verificadorDeQuery(campos, tabelas): boolean {
@@ -153,7 +153,7 @@ export class AppComponent implements OnInit {
         }
         i++;
       }
-    } else{ return false}
+    } else { return false }
 
     //OPERACOES
 
@@ -208,18 +208,20 @@ export class AppComponent implements OnInit {
 
     // Montando array com cada projection e sua respectiva tabela
     campos.map(c => {
-      let splitedCampo = c.split(" ")
-      let campo = splitedCampo[0]
-      if (campo.split('.').length == 2) {
-        campo = campo.split('.')[1]
+      if (c != undefined) {
+        let splitedCampo = c.split(" ")
+        let campo = splitedCampo[0]
+        if (campo.split('.').length == 2) {
+          campo = campo.split('.')[1]
+        }
+        this.tables.forEach(table => {
+          table.tabela.forEach(campoTabela => {
+            if (campo == campoTabela) {
+              tableProjections.push({ tabela: table.nome, campo: campo })
+            }
+          })
+        });
       }
-      this.tables.forEach(table => {
-        table.tabela.forEach(campoTabela => {
-          if (campo == campoTabela) {
-            tableProjections.push({ tabela: table.nome, campo: campo })
-          }
-        })
-      });
     })
 
     // Montando cada tabela com seus selects e projeções
@@ -267,11 +269,7 @@ export class AppComponent implements OnInit {
     } else {
       this.juncoes.push({ join: null, operacoes: this.operations })
     }
-    var contador = 0
-    this.juncoes.forEach(e => {
-
-
-    })
+    console.log(this.juncoes)
     return true
   }
 
